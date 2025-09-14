@@ -5,12 +5,13 @@ scikit-learn
 xgboost
 tensorflow>=2.14
 
-# Datasets
-ucimlrepo
+# Data downloading and processing
+kaggle
+pathlib2
 
-# Visualization
+# Visualization and analysis
 matplotlib
-joblib
+seaborn
 
 # Utilities
 tqdm
@@ -20,3 +21,7 @@ pyyaml
 # Development and testing
 pytest
 jupyter
+ipykernel
+
+# Optional: For manual dataset downloads (not actively used)
+# ucimlrepo

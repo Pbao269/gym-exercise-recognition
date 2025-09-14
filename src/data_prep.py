@@ -8,7 +8,7 @@ import pandas as pd
 from pathlib import Path
 from typing import List, Tuple
 from sklearn.model_selection import GroupShuffleSplit
-from ucimlrepo import fetch_ucirepo
+# from ucimlrepo import fetch_ucirepo  # Not needed for manual download
 from config import (WINDOW_SIZE, WINDOW_STRIDE, SENSOR_COLS,
                     LABEL_CANDIDATES, GROUP_CANDIDATES, RANDOM_STATE)
 
@@ -25,11 +25,35 @@ def _pick_one(cols: List[str], candidates: List[str]) -> str:
             return cols[low.index(cand.lower())]
     raise ValueError(f"Could not find any of {candidates} in columns: {cols[:15]}")
 
-def load_recgym() -> pd.DataFrame:
-    ds = fetch_ucirepo(id=1128)  # RecGym id on UCI
-    X = ds.data.features
-    y = ds.data.targets
-    return pd.concat([X, y], axis=1)
+def load_gym_dataset() -> pd.DataFrame:
+    """
+    Load gym exercises dataset from manually downloaded files.
+    Supports both RecGym and Kaggle gym datasets.
+    """
+    raw_dir = DATA_DIR / "raw"
+    
+    # Look for common file patterns
+    csv_files = list(raw_dir.glob("*.csv"))
+    if not csv_files:
+        raise FileNotFoundError(
+            f"No CSV files found in {raw_dir}. Please download a gym dataset:\n"
+            "Option 1 (Kaggle): https://www.kaggle.com/datasets/zhaxidelebsz/10-gym-exercises-with-615-abstracted-features\n"
+            "Option 2 (UCI): https://uci-ics-mlr-prod.aws.uci.edu/dataset/1128/recgym:+gym+workouts+recognition+dataset+with+imu+and+capacitive+sensor-7\n"
+            "Extract files to data/raw/"
+        )
+    
+    # Load the first CSV file (or combine multiple if needed)
+    if len(csv_files) == 1:
+        print(f"Loading gym data from: {csv_files[0]}")
+        df = pd.read_csv(csv_files[0])
+    else:
+        print(f"Found {len(csv_files)} CSV files, combining them...")
+        dfs = [pd.read_csv(f) for f in csv_files]
+        df = pd.concat(dfs, ignore_index=True)
+    
+    print(f"Dataset shape: {df.shape}")
+    print(f"Columns: {df.columns.tolist()}")
+    return df
 
 def standardize(df: pd.DataFrame, sensors: List[str]) -> pd.DataFrame:
     # z-score channel-wise (mean=0, std=1) to help training stability
@@ -56,13 +80,28 @@ def window_consistent(df: pd.DataFrame, label_col: str, sensors: List[str]):
     return np.array(Xw), np.array(yw)
 
 def main():
-    print("Fetching RecGym from UCI...")
-    df = load_recgym()
+    print("Loading gym exercises dataset...")
+    df = load_gym_dataset()
     label_col = _pick_one(df.columns.tolist(), LABEL_CANDIDATES)
-    group_col = _pick_one(df.columns.tolist(), GROUP_CANDIDATES)
-    sensors = [c for c in SENSOR_COLS if c in df.columns]
-    if len(sensors) < 6:
-        raise ValueError(f"Missing expected sensor columns. Found: {sensors}")
+    
+    # Try to find group column, but make it optional for some datasets
+    try:
+        group_col = _pick_one(df.columns.tolist(), GROUP_CANDIDATES)
+    except ValueError:
+        print("Warning: No group/subject column found. Will use row indices for grouping.")
+        df['_subject_id'] = df.index // 1000  # Create artificial subjects
+        group_col = '_subject_id'
+    
+    # Auto-detect sensor columns (numeric columns that aren't labels/groups)
+    numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+    sensors = [c for c in numeric_cols if c not in [label_col, group_col]]
+    
+    if len(sensors) < 3:
+        raise ValueError(f"Need at least 3 sensor columns. Found: {sensors}")
+    
+    print(f"Using sensor columns: {sensors[:10]}{'...' if len(sensors) > 10 else ''}")
+    print(f"Label column: {label_col}")
+    print(f"Group column: {group_col}")
 
     # Clean & standardize
     df = df.dropna(subset=sensors + [label_col, group_col]).reset_index(drop=True)

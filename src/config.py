@@ -10,12 +10,13 @@ WINDOW_SIZE = WINDOW_SECONDS * FS
 # 50% overlap (slide by 1.5 seconds)
 WINDOW_STRIDE = WINDOW_SIZE // 2
 
-# Expected sensor columns in RecGym (IMU + body capacitance)
+# Expected sensor columns (will be auto-detected from available columns)
+# RecGym format: IMU + body capacitance
 SENSOR_COLS = ["A_x", "A_y", "A_z", "G_x", "G_y", "G_z", "C_1"]
 
 # Candidate column names for labels and group/subject IDs (dataset may vary)
-LABEL_CANDIDATES = ["activity", "Activity", "label", "Label"]
-GROUP_CANDIDATES = ["volunteer", "Volunteer", "subject", "Subject", "user_name"]
+LABEL_CANDIDATES = ["Workout", "workout", "activity", "Activity", "label", "Label", "class", "Class", "exercise", "Exercise"]
+GROUP_CANDIDATES = ["Object", "object", "volunteer", "Volunteer", "subject", "Subject", "user_name", "user", "User", "participant", "Participant"]
 
 # For reproducible splits
 RANDOM_STATE = 42
