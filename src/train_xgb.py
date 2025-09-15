@@ -130,15 +130,9 @@ def main():
         eval_metric='mlogloss'      # Multiclass log loss
     )
     
-    # Train with early stopping using validation set
-    print("Training with early stopping...")
-    clf.fit(
-        Xtr, ytr,
-        eval_set=[(Xtr, ytr), (Xva, yva)],
-        eval_names=['train', 'val'],
-        verbose=100,  # Print every 100 rounds
-        early_stopping_rounds=50
-    )
+    # Train the classifier (simple training for compatibility)
+    print("Training XGBoost classifier...")
+    clf.fit(Xtr, ytr)
     
     # Evaluate on validation set
     print("\n" + "="*60)
