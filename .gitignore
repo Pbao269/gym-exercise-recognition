@@ -69,3 +69,10 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+
+# RecGym data
+data/raw/*
+data/processed/*
+
+# Kaggle data
+.kaggle/*
