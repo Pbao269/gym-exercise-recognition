@@ -138,6 +138,18 @@ def main():
                         X_te=X_te, y_te=y_te,
                         sensors=np.array(sensors), label_name=np.array([label_col]))
     print("Saved ->", PROC_DIR / "windows.npz")
+    
+    # Quick verification summary
+    print("\n" + "="*50)
+    print("QUICK VERIFICATION SUMMARY")
+    print("="*50)
+    print(f"Total windows: {len(X)}")
+    print(f"Window shape: {X.shape[1:]} (time_steps × sensors)")
+    print(f"Unique labels: {len(np.unique(y))}")
+    print(f"Labels: {sorted(np.unique(y))}")
+    print(f"Split sizes: Train={len(X_tr)}, Val={len(X_va)}, Test={len(X_te)}")
+    print("Data processing completed successfully!")
+    print("\nRun 'python src/verify_data.py' for detailed verification")
 
 if __name__ == "__main__":
     main()
